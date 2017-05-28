@@ -4,9 +4,11 @@
 // import { type Parser, of, seq, oneOf, alt, lazy, digit, string as word } from 'parsimmon'
 import { flatten, join, pipe } from 'ramda'
 
-import { lcIdentFull } from './ident'
-import { args, combinator, program, args2 } from './combinator'
+import { lcIdentFull, boxedTypeIdent } from './ident'
+import { args, combinator, program, args2, fullCombinatorId, typeTerm } from './combinator'
 import { term } from './term'
+import example from './example'
+import { ignore } from './comment'
 
 const resultToString = pipe(flatten, join(''))
 
@@ -16,29 +18,26 @@ const resultToString = pipe(flatten, join(''))
 
 
 // const result = lcIdentFull.parse('ok.asd#17217381')
+// const result = lcIdentFull.parse('vector#cb9f372d')
+// const result = combinator.parse('vector#cb9f372d {t:Type} msg_id:long = Vector t;')
 // const result = combinator.parse('vector { t : Type } # [ t ] = Vector t;')
 // const result = combinator.parse('vector{t:Type}#[t]=Vector t;')
 // const result = args.parse('(123+var)')
 // const result = args.parse('abs.ok<(123+var)>')
 // const result = args.parse('total:int')
 // const result = combinator.parse('abs.ok<(123+var)>')
-const result = program.parse(`
----types---
-vector {t:Type} # [t] = Vector t;
----functions---
-tuple {t:Type} {n:#} [t] = Tuple t n;
-vectorTotal {t:Type} total_count:int vector:%(t) = VectorTotal t;`)
 // const result = program.parse(`
 // ---types---
 // vector {t:Type} # [t] = Vector t;
 // ---functions---
-// invokeAfterMsg#cb9f372d {X:Type} msg_id:long query:!X = X;
-// invokeAfterMsgs#3dc4b4f0 {X:Type} msg_ids:Vector<long> query:!X = X;
-// initConnection#69796de9 {X:Type} api_id:int device_model:string system_version:string app_version:string lang_code:string query:!X = X;
-// invokeWithLayer#da9b0d0d {X:Type} layer:int query:!X = X;`)
+// tuple {t:Type} {n:#} [t] = Tuple t n;
+// vectorTotal {t:Type} total_count:int vector:%(Vector t) = VectorTotal t;`)
+// const result = ignore.parse(`//asdfgasd`)
+const result = program.parse(example)
+// const result = typeTerm.parse(`contacts.Link`)
 const list = result.value
   ? resultToString(result.value)
   : result
-console.log(list)
+list
 
 // console.log(list)

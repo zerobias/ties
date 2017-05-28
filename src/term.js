@@ -1,7 +1,7 @@
 //@flow
 'use strict'
-import { seq, alt, lazy, optWhitespace, separatedWord } from './fork'
-
+import { seq, alt, lazy, separatedWord, optWhitespace } from './fork'
+import { ignore } from './comment'
 import { plus, natConst, hash, langle, rangle, percent, openPar, closePar, comma } from './token'
 import { boxedTypeIdent, varIdent, lcIdentNs } from './ident'
 
@@ -49,6 +49,6 @@ export const term = alt(
     rangle,
   ),
   natConst,
-  varIdent,
   typeIdent,
+  varIdent,
 )

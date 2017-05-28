@@ -35,7 +35,7 @@ export const ucIdentNs = seq(
 
 export const lcIdentFull = seq(
   lcIdentNs,
-  seq(hash, digit.times(8).desc('ident 8 digits')).atMost(1)
+  seq(hash, hexDigit.times(8)).atMost(1)
 )
 
 export const varIdent = alt(lcIdent, ucIdent)

@@ -1,6 +1,6 @@
 {
   "name": "ties",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Telegram/VK API type language parser",
   "main": "lib/index.js",
   "scripts": {
@@ -35,5 +35,8 @@
     "eslint-plugin-flowtype": "^2.33.0",
     "flow-bin": "^0.47.0",
     "rimraf": "^2.6.1"
-  }
+  },
+  "files": [
+    "src"
+  ]
 }

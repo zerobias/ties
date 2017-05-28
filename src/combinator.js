@@ -1,6 +1,6 @@
 //@flow
-import { seq, separatedWord, alt, lazy, optWhitespace, digit, word } from './fork'
-
+import { seq, separatedWord, alt, lazy, optWhitespace, word } from './fork'
+import { ignore } from './comment'
 import { comma, langle, rangle, natConst, dot, question, exclMark, underscore,
   openBrace, closeBrace, colon, openPar, closePar, asterisk,
   openBracket, closeBracket, equals, semicolon, tripleMinus } from './token'
@@ -41,7 +41,7 @@ const multiplicity = seq(natTerm, optWhitespace, asterisk)
 
 export const fullCombinatorId = alt(lcIdentFull, underscore)
 export const combinatorId = alt(lcIdentNs, underscore)
-const typeTerm = seq(exclMark.atMost(1), origTypeTerm)
+export const typeTerm = seq(exclMark.atMost(1), origTypeTerm)
 export const optArgs = seq(
   openBrace,
   separatedWord(varIdent).atLeast(1),
@@ -116,6 +116,7 @@ export const combinator = seq(
 
 
 export const declaration = alt(
+  ignore,
   combinator,
 )
 
@@ -136,12 +137,14 @@ export const typeDeclaration = seq(
   word('types'),
   optWhitespace,
   tripleMinus,
-  separatedWord(combinator).atLeast(1),
+  seq(ignore, combinator).atLeast(1),
   optWhitespace,
 )
 
 export const program = seq(
-  typeDeclaration,
+  optWhitespace,
+  separatedWord(combinator).atLeast(1),
+  optWhitespace,
   alt(
     funDeclaration,
     typeDeclaration,
