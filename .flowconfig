@@ -1,0 +1,25 @@
+[ignore]
+<PROJECT_ROOT>/node_modules/*.json
+.vscode/.*
+.*/**/*.draft.js
+<PROJECT_ROOT>/lib
+<PROJECT_ROOT>/es
+
+[include]
+<PROJECT_ROOT>/src
+
+[libs]
+./flow-typed
+<PROJECT_ROOT>/node_modules/flow-static-land
+
+[options]
+suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
+suppress_type=$FlowIssue
+unsafe.enable_getters_and_setters=true
+emoji=true
+esproposal.decorators=ignore
+module.use_strict=true
+strip_root=true
+esproposal.export_star_as=enable
+module.name_mapper='^flow-static-land/lib\(.*\)$' -> 'flow-static-land/src\1'
+module.name_mapper='^flow-static-land/src\(.*\)$' -> 'flow-static-land/\1'
