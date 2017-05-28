@@ -1,3 +1,3 @@
 //@flow
 'use strict'
-import './parsimmon'
+export * from './parsimmon'

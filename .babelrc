@@ -3,6 +3,7 @@
   ],
   "plugins": [
     "transform-flow-strip-types",
+    "transform-do-expressions",
     "transform-class-properties",
     ["transform-object-rest-spread", { "useBuiltIns": true }]
     // ,"closure-elimination"

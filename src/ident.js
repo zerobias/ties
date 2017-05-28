@@ -1,7 +1,7 @@
 //@flow
 'use strict'
 import { seq, oneOf, alt, digit } from './fork'
-
+import { resultToString } from './util'
 import { dot, underscore, hash } from './token'
 
 export const lcLetter = oneOf('abcdefghijklmnopqrstuvwxyz')
@@ -31,7 +31,7 @@ export const lcIdentNs = seq(
 export const ucIdentNs = seq(
   namespace.atMost(1),
   ucIdent
-)
+).map(resultToString)
 
 export const lcIdentFull = seq(
   lcIdentNs,

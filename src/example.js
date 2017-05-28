@@ -1,7 +1,7 @@
 //@flow
-
+/* eslint-disable */
 const example = `
-resPQ#05162463 nonce:int128 server_nonce:int128 pq:string server_public_key_fingerprints:Vector<long> = ResPQ;
+resPQ#05162463 nonce:flags.0?int128 server_nonce:int128 pq:!string server_public_key_fingerprints:Vector<long> = ResPQ;
 
 p_q_inner_data#83c95aec pq:string p:string q:string nonce:int128 server_nonce:int128 new_nonce:int256 = P_Q_inner_data;
 
@@ -956,7 +956,7 @@ channels.checkUsername#10e6bd2c channel:InputChannel username:string = Bool;
 channels.updateUsername#3514b3de channel:InputChannel username:string = Bool;
 channels.joinChannel#24b524c5 channel:InputChannel = Updates;
 channels.leaveChannel#f836aa95 channel:InputChannel = Updates;
-channels.inviteToChannel#199f3a6c channel:InputChannel users:Vector<InputUser> = Updates;
+channels.inviteToChannel#199f3a6c channel:InputChannel users:Vector<InputUser, User> = Updates;
 channels.kickFromChannel#a672de14 channel:InputChannel user_id:InputUser kicked:Bool = Updates;
 channels.exportInvite#c7560885 channel:InputChannel = ExportedChatInvite;
 channels.deleteChannel#c0111fe3 channel:InputChannel = Updates;

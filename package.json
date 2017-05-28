@@ -1,14 +1,17 @@
 {
   "name": "ties",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Telegram/VK API type language parser",
   "main": "lib/index.js",
+  "module": "es/index.js",
   "scripts": {
+    "clean": "rimraf lib/ && rimraf es/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:cjs": "cross-env BABEL_ENV=commonjs babel src/ -d lib -s",
     "build:es": "babel src/ -d es -s",
     "build": "npm run build:cjs && npm run build:es",
-    "watch": "npm run build:cjs -- --watch"
+    "watch": "npm run build:cjs -- --watch",
+    "prepublish": "npm run clean && npm run build"
   },
   "author": "Zero Bias",
   "license": "MIT",
@@ -18,13 +21,17 @@
     }
   },
   "dependencies": {
-    "ramda": "^0.24.0"
+    "daggy": "^1.1.0",
+    "folktale": "^2.0.0-beta1",
+    "ramda": "^0.24.0",
+    "union-type": "^0.4.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
     "babel-eslint": "^7.2.3",
     "babel-plugin-closure-elimination": "^1.1.16",
+    "babel-plugin-transform-do-expressions": "^6.22.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
@@ -36,7 +43,21 @@
     "flow-bin": "^0.47.0",
     "rimraf": "^2.6.1"
   },
+  "bugs": {
+    "url": "https://github.com/zerobias/ties/issues"
+  },
   "files": [
-    "src"
-  ]
+    "src",
+    "lib"
+  ],
+  "maintainers": [
+    {
+      "name": "Zero Bias",
+      "email": "ribkatt@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerobias/ties.git"
+  }
 }

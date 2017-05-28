@@ -33,11 +33,11 @@ const resultToString = pipe(flatten, join(''))
 // tuple {t:Type} {n:#} [t] = Tuple t n;
 // vectorTotal {t:Type} total_count:int vector:%(Vector t) = VectorTotal t;`)
 // const result = ignore.parse(`//asdfgasd`)
-const result = program.parse(example)
+export const result = program.parse(example)
 // const result = typeTerm.parse(`contacts.Link`)
 const list = result.value
   ? resultToString(result.value)
   : result
-list
-
-// console.log(list)
+const res = result.value[1][0] //[1][2]
+// res
+console.log(res)

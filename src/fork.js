@@ -216,6 +216,13 @@ export class Parsimmon {
   of(value: string[] | string): Parsimmon {
     return succeed(value)
   }
+  log(tag: string = '') {
+    return this.map(e => (
+      console.log(tag),
+      console.dir(e, { colors: true }),
+      e
+    ))
+  }
 }
 
 export function isParser(obj: Parsimmon) {
@@ -652,11 +659,12 @@ export const digit: Parsimmon = regexp(/[0-9]/).desc('a digit')
 export const digits: Parsimmon = regexp(/[0-9]*/).desc('optional digits')
 export const letter: Parsimmon = regexp(/[a-z]/i).desc('a letter')
 export const letters: Parsimmon = regexp(/[a-z]*/i).desc('optional letters')
-export const optWhitespace: Parsimmon = regexp(/\s*/).desc('optional whitespace')
+export const optWhitespace: Parsimmon = regexp(/\s*/).map(() => '')
 export function separatedWord(p: Parsimmon) {
-  return seq(optWhitespace, p)
+  return optWhitespace.then(p)
 }
 
+export const noWhitespace = optWhitespace.map(() => '')
 export const whitespace: Parsimmon = regexp(/\s+/).desc('whitespace')
 export { succeed as of }
 /*Parsimmon.all = all
