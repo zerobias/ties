@@ -1,7 +1,7 @@
 //@flow
 import { flatten, join, pipe, of, reject, filter, isEmpty, unnest } from 'ramda'
-import Type from 'union-type'
-import { hasInstance, fromNullable } from 'folktale/data/maybe'
+import Type from 'mezzanine'
+import { hasInstance, fromNullable, Just, Nothing, IMaybe } from 'folktale/data/maybe'
 
 import { seq, separatedWord, alt, lazy, optWhitespace, noWhitespace, word } from './fork'
 import { ignore } from './comment'
@@ -136,17 +136,68 @@ export const args = alt(
   args1,
 )
 
+const { ResultType, isResultType } = (() => {
+  type ResultType$Subtype = 'Plain' | 'Dependent'
+  interface ResultType$Case<-P, -D> {
+    Plain(obj: ResultType$): P,
+    Dependent(obj: ResultType$): D,
+  }
+  class ResultType$ {
+    _: string = 'ResultType'
+    subtype: ResultType$Subtype
+    value: string | string[]
+    constructor(val: string | string[], subtype: ResultType$Subtype) {
+      this.subtype = subtype
+      this.value = val
+    }
+    case<P, D>(val: ResultType$Case<P, D>): P | D {
+      switch (this.subtype) {
+        case 'Plain': return val.Plain(this)
+        case 'Dependent': return val.Dependent(this)
+      }
+    }
+    static is(obj: *) {
+      return obj instanceof ResultType$
+    }
+    //$FlowIssue
+    [Symbol.toPrimitive]() {
+      return this.toString()
+    }
+    //$FlowIssue
+    get [Symbol.toStringTag]() {
+      return `ResultType ${this.subtype}`
+    }
+    toString() {
+      return this.case({
+        Plain    : () => `ResultType[Plain] ${this.value}`,
+        Dependent: () => `ResultType[Dependent] ${this.value}`,
+      })
+    }
+  }
+  const returnType = {
+    Plain    : (val: string) => new ResultType$(val, 'Plain'),
+    Dependent: (val: string[]) => new ResultType$(val, 'Dependent'),
+  }
+  const ret = { ResultType: returnType, isResultType: ResultType$.is }
+  return ret
+})()
+
 export const combinator = seq(
-  fullCombinatorId.map(resultToString),
+  fullCombinatorId, //.map(resultToString),
   separatedWord(optArgs).many(),
   separatedWord(args)
     .many()
-    .skip(optWhitespace),
+    .skip(optWhitespace)
     // .map(unnest),
     // .map(reject(isEmpty)),
-  equals
+    .skip(equals)
     .skip(optWhitespace),
   resultType
+    .map(([firstType, restTypes]: [string, string[]]) =>
+      restTypes.length === 0
+        ? ResultType.Plain(firstType)
+        : ResultType.Dependent([firstType, ...restTypes])
+    )
     .skip(optWhitespace)
     .skip(semicolon)
     .skip(optWhitespace),

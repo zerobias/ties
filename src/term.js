@@ -1,6 +1,5 @@
 //@flow
 'use strict'
-import Type from 'union-type'
 import { Just, Nothing, IMaybe } from 'folktale/data/maybe'
 import { flatten, map } from 'ramda'
 import { seq, alt, lazy, separatedWord, optWhitespace } from './fork'
@@ -74,6 +73,8 @@ const { Term$, isTerm } = do {
   const ret = { Term$: term, isTerm: Term.is }
   ret
 }
+
+export { Term$ }
 
 const getTerm = ([shape, obj]) => {
   if (Array.isArray(obj)) return Term$.List([shape, obj])

@@ -23,8 +23,9 @@
   "dependencies": {
     "daggy": "^1.1.0",
     "folktale": "^2.0.0-beta1",
-    "ramda": "^0.24.0",
-    "union-type": "^0.4.0"
+    "mezzanine": "0.0.3",
+    "partial.lenses": "^11.8.0",
+    "ramda": "^0.24.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
