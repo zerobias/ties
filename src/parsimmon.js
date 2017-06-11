@@ -1,10 +1,11 @@
 //@flow
 'use strict'
 
+import { outputJsonSync } from 'fs-extra'
+
 // import { type Parser, of, seq, oneOf, alt, lazy, digit, string as word } from 'parsimmon'
 import { flatten, join, pipe, is, concat, tap } from 'ramda'
-import { taggedSum } from 'daggy'
-import Type from 'mezzanine'
+import { Type, Union } from 'mezzanine'
 import * as L from 'partial.lenses'
 import { lcIdentFull, boxedTypeIdent } from './ident'
 import { args, combinator, program, args2, fullCombinatorId } from './combinator'
@@ -50,44 +51,16 @@ const lens = L.compose(
 const overview = L.compose(
   ['value'],
   L.find(is(Array)),
+  0,
+  0, 'value',
+  // 2,
+  // 3,
+  // 2,
+  // 1,
 )
 
 lens
 
-const flat =  x => (console.log(x), flatten(x))
-
-const CombinatorPart = Type({
-  Ident: { '@@value': String },
-  Code : { '@@value': String }
-})
-
-
-const Combinator = Type({
-  Short: { name: CombinatorPart },
-  Full : { name: CombinatorPart, code: CombinatorPart },
-})
-
-const val = Combinator.match({ name: CombinatorPart.Ident('ok') })
-val
-
-const toObj =  ([value, id]) =>
-  id == null || id === ''
-    ? Combinator.Short(CombinatorPart.Ident(flatten(value).join('')))
-    : Combinator.Full(
-      CombinatorPart.Ident(value),
-      CombinatorPart.Code(id))
-
-const createCombinatorId = L.compose(
-  // join(''),
-  // L.rewrite(join('')),
-  L.joinAs(join(''), '', flatten),
-  // tap(e => console.log(e)),
-)
-
-// const inChain = L.chain(() => L.compose(L.modifyOp(createCombinatorId)))
-
-// const res = L.transform([lens, L.elems, 0], result)//[1]//[0]//[2]
-// const res2 = L.transform([lens, L.elems, L.chain((e) => L.compose(flatten, toObj, 0)(e))], res)
-//[2]
-// res
-console.log(L.get(overview, result)[0])
+const resultFin = L.get(overview, result)
+// outputJsonSync('./out.json', resultFin, { spaces: 2 })
+console.log(resultFin)

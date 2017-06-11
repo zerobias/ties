@@ -1,8 +1,8 @@
 //@flow
-import { flatten, join, pipe, of, reject, filter, isEmpty, unnest } from 'ramda'
-import Type from 'mezzanine'
-import { hasInstance, fromNullable, Just, Nothing, IMaybe } from 'folktale/data/maybe'
-
+import { T, flatten, join, pipe, of, reject, filter, isEmpty, unnest, complement } from 'ramda'
+// import Type from 'mezzanine'
+// import { hasInstance, fromNullable, Just, Nothing, IMaybe } from 'folktale/data/maybe'
+import { Type, Union } from 'mezzanine'
 import { seq, separatedWord, alt, lazy, optWhitespace, noWhitespace, word } from './fork'
 import { ignore } from './comment'
 import { comma, langle, rangle, natConst, dot, question, exclMark, underscore,
@@ -10,9 +10,7 @@ import { comma, langle, rangle, natConst, dot, question, exclMark, underscore,
   openBracket, closeBracket, equals, semicolon, tripleMinus } from './token'
 import { boxedTypeIdent, varIdent, varIdentOpt, lcIdentFull, lcIdentNs } from './ident'
 import { subexpr, natTerm, typeTerm /*as origTypeTerm*/ } from './term'
-import { resultToString, monoListToMaybe } from './util'
-
-const resultToList = pipe(flatten, join(''), of)
+import { resultToString, monoListToMaybe, notEmpty } from './util'
 
 export const resultType = alt(
   seq(
@@ -35,15 +33,47 @@ export const resultType = alt(
   ),
 )
 
-const Argument = ([name, cond, type]) => ({
-  _: 'Argument',
-  name,
-  cond,
-  type,
-})
+// const Argument = Type`Argument`({
+//   name  : String,
+//   cond  : T,
+//   tlType: T
+// }).contramap(([name, cond, tlType]) => ({
+//   name,
+//   cond,
+//   tlType,
+// }))
+
+// const Plain = Type`Plain`({
+//   mainPart: String
+// })
+//   // .contramap(({ mainPart }) => mainPart)
+// const Dependent = Type`Dependent`({
+//   mainPart: String,
+//   subpart : notEmpty
+// })
+
+// const Bac = Type`Bac`(T)
+
+// const flatString = pipe(flatten, join(''))
+
+// const Result = Union`Result`({
+//   Plain,
+//   Dependent,
+//   Bac
+// }, {
+//   typed: ctx => ctx.type
+// }).contramap(([p1, p2]) => ({
+//   mainPart: flatString(p1),
+//   subpart : flatString(p2)
+// }))/*.contramap(
+//   e => (
+//     console.log(e),
+//     e
+//   )
+// )*/
 
 export const condition = seq(
-  varIdent.map(resultToString),
+  varIdent, //.map(resultToString),
   monoListToMaybe(
     dot.then(
       natConst
@@ -52,14 +82,11 @@ export const condition = seq(
     ).atMost(1)),
   question
 )
-// .map(([flags, indexArr, quest]) => {
-
-// })
 
 const multiplicity = seq(natTerm, optWhitespace, asterisk)
 
 export const fullCombinatorId = alt(lcIdentFull, underscore)
-export const combinatorId = alt(lcIdentNs, underscore)
+// export const combinatorId = alt(lcIdentNs, underscore)
 // export const typeTerm = seq(
 //   exclMark.atMost(1),
 //   origTypeTerm)
@@ -95,7 +122,7 @@ export const args2 = seq(
     )
     .skip(noWhitespace),
   typeTerm,
-).map(Argument)
+)//.map(Argument)
 
 export const args3 = seq(
   openPar,
@@ -136,52 +163,6 @@ export const args = alt(
   args1,
 )
 
-const { ResultType, isResultType } = (() => {
-  type ResultType$Subtype = 'Plain' | 'Dependent'
-  interface ResultType$Case<-P, -D> {
-    Plain(obj: ResultType$): P,
-    Dependent(obj: ResultType$): D,
-  }
-  class ResultType$ {
-    _: string = 'ResultType'
-    subtype: ResultType$Subtype
-    value: string | string[]
-    constructor(val: string | string[], subtype: ResultType$Subtype) {
-      this.subtype = subtype
-      this.value = val
-    }
-    case<P, D>(val: ResultType$Case<P, D>): P | D {
-      switch (this.subtype) {
-        case 'Plain': return val.Plain(this)
-        case 'Dependent': return val.Dependent(this)
-      }
-    }
-    static is(obj: *) {
-      return obj instanceof ResultType$
-    }
-    //$FlowIssue
-    [Symbol.toPrimitive]() {
-      return this.toString()
-    }
-    //$FlowIssue
-    get [Symbol.toStringTag]() {
-      return `ResultType ${this.subtype}`
-    }
-    toString() {
-      return this.case({
-        Plain    : () => `ResultType[Plain] ${this.value}`,
-        Dependent: () => `ResultType[Dependent] ${this.value}`,
-      })
-    }
-  }
-  const returnType = {
-    Plain    : (val: string) => new ResultType$(val, 'Plain'),
-    Dependent: (val: string[]) => new ResultType$(val, 'Dependent'),
-  }
-  const ret = { ResultType: returnType, isResultType: ResultType$.is }
-  return ret
-})()
-
 export const combinator = seq(
   fullCombinatorId, //.map(resultToString),
   separatedWord(optArgs).many(),
@@ -193,11 +174,7 @@ export const combinator = seq(
     .skip(equals)
     .skip(optWhitespace),
   resultType
-    .map(([firstType, restTypes]: [string, string[]]) =>
-      restTypes.length === 0
-        ? ResultType.Plain(firstType)
-        : ResultType.Dependent([firstType, ...restTypes])
-    )
+    // .map(Result)
     .skip(optWhitespace)
     .skip(semicolon)
     .skip(optWhitespace),

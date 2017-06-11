@@ -1,9 +1,9 @@
 //@flow
 'use strict'
-import Type from 'mezzanine'
-import { flatten, join, unless, isEmpty } from 'ramda'
+import { Type, Union } from 'mezzanine'
+import { flatten, join, unless, isEmpty, defaultTo, complement, T } from 'ramda'
 import { seq, oneOf, alt, digit } from './fork'
-import { resultToString } from './util'
+import { resultToString, notEmpty } from './util'
 import { dot, underscore, hash } from './token'
 
 export const lcLetter = oneOf('abcdefghijklmnopqrstuvwxyz')
@@ -18,29 +18,48 @@ export const identChar = alt(
 export const lcIdent = seq(
   lcLetter,
   identChar.many()
-)
+).map(resultToString)
 export const ucIdent = seq(
   ucLetter,
   identChar.many()
-)
+).map(resultToString)
 
-const CombinatorPart = Type({
-  Ident: { '@@value': String },
-  Code : { '@@value': String }
-})
+// const CombinatorPart = Type`CombinatorPart`({
+//   ident: String,
+//   code : String,
+// })
 
 
-const Combinator = Type({
-  Short: { name: CombinatorPart },
-  Full : { name: CombinatorPart, code: CombinatorPart },
-})
-
-const createCombinator =
-  ([ident, code]) => isEmpty(code)
-    ? Combinator.Short(ident)
-    : Combinator.Full(ident, code)
+// const Combinator = Union`Combinator`({
+//   Full : { ident: String, code: notEmpty },
+//   Short: { ident: String },
+// }).contramap(([ident, code]) => ({ ident, code }))
 
 const namespace = seq(lcIdent, dot)
+
+const LcIdentFree = Type`LcIdentFree`({
+  group: isEmpty,
+  ident: String,
+  hash : String,
+})
+
+
+const LcIdentGroup = Type`LcIdentGroup`({
+  group: notEmpty,
+  ident: String,
+  hash : String,
+})
+
+const LcIdent = Union`LcIdent`({
+  Group: LcIdentGroup,
+  Free : LcIdentFree
+}, {
+  hasHash: (ctx) => notEmpty(ctx.value.hash),
+  ident  : ctx => ctx.case({
+    Group: ({ ident, group, hash }) => [group.join(''), ident, hash].join(''),
+    Free : ({ ident, hash }) => [ident, hash].join('')
+  })
+}).contramap(([[group, ident], hash]: [[string[], string], string]) => ({ group, ident, hash }))
 
 export const lcIdentNs = seq(
   namespace.atMost(1),
@@ -51,18 +70,20 @@ export const ucIdentNs = seq(
   ucIdent
 ) //.map(resultToString)
 
+
+
 export const lcIdentFull = seq(
   lcIdentNs
-    .map(flatten)
-    .map(join(''))
-    .map(CombinatorPart.Ident),
+    // .map(flatten)
+    // .map(join(''))
+  ,
   seq(hash, hexDigit.times(8))
     .atMost(1)
     .map(flatten)
     .map(join(''))
-    .map(unless(isEmpty, CombinatorPart.Code))
-).map(createCombinator)
- .map(e => (console.log(e), e))
+    .map(defaultTo(''))
+).map(LcIdent)
+//  .map(e => (console.log(e), e))
 
 export const varIdent = alt(lcIdent, ucIdent)
 

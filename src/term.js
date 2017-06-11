@@ -1,14 +1,20 @@
 //@flow
 'use strict'
 import { Just, Nothing, IMaybe } from 'folktale/data/maybe'
-import { flatten, map } from 'ramda'
+import { flatten, T, complement, isEmpty } from 'ramda'
+import { Type, Union } from 'mezzanine'
 import { seq, alt, lazy, separatedWord, optWhitespace } from './fork'
 import { ignore } from './comment'
 import { plus, natConst, hash, langle, rangle, percent, openPar, closePar, comma, exclMark } from './token'
 import { boxedTypeIdent, varIdent, lcIdentNs } from './ident'
-import { resultToString, monoListToMaybe } from './util'
+import { resultToString, monoListToMaybe, notEmpty, noSingleArray } from './util'
 
-const { Term$, isTerm } = do {
+const Plain = Type`Plain`(Array)
+const List = Type`List`(Array)
+const Bare = Type`Bare`(Array)
+const Void = Type`Void`(T)
+
+/*const { isTerm } = do {
   type Term$Subtype = 'Plain' | 'Bare' | 'List' | 'Empty'
   interface Term$Case<-S, -B, -L, -E> {
     Plain(obj: $Shape<Term>): S,
@@ -28,7 +34,7 @@ const { Term$, isTerm } = do {
       this.shape = shape
       if (subtype === 'List' && Array.isArray(val)) {
         const [head, ...tail] = val
-        this.vector = Just(head)
+        this.vector = head
         if (tail.length === 1)
           this.value = tail[0]
         else
@@ -40,10 +46,10 @@ const { Term$, isTerm } = do {
     }
     case<S, B, L>(val: Term$Case<S, B, L>): S | B | L {
       switch (this.subtype) {
-        case 'Plain': return val.Plain(this)
-        case 'Bare': return val.Bare(this)
-        case 'List': return val.List(this)
-        case 'Empty': return val.Empty(this)
+        case 'Plain': return Plain(this.value)
+        case 'Bare': return Bare(this.value)
+        case 'List': return List(this.value)
+        case 'Empty': return Void()
       }
     }
     static is(obj: *) {
@@ -65,28 +71,29 @@ const { Term$, isTerm } = do {
     }
   }
   const term = {
-    Plain: ([shape, val]: [Shape, string | Term]) => new Term(val, shape, 'Plain'),
-    Bare : ([shape, val]: [Shape, string]) => new Term(val, shape, 'Bare'),
-    List : ([shape, val]: [Shape, Term[]]) => new Term(val, shape, 'List'),
-    Empty: () => new Term('', Nothing(), 'Empty'),
+    Plain: ([shape, val]: [Shape, string | Term]) => Plain([shape, val]),
+    Bare : ([shape, val]: [Shape, string]) => Bare([shape, val]),
+    List : ([shape, val]: [Shape, Term[]]) => List([shape, val]),
+    Empty: () => Void(),
   }
   const ret = { Term$: term, isTerm: Term.is }
   ret
-}
+}*/
 
-export { Term$ }
 
-const getTerm = ([shape, obj]) => {
-  if (Array.isArray(obj)) return Term$.List([shape, obj])
-  if (isTerm(obj)) return obj
-  return Term$.Plain([shape, obj])
-}
+// const getTerm = ([shape, obj]) => {
+//   if (Array.isArray(obj)) return List([shape, obj])
+//   if (!!shape) return obj
+//   return Plain([shape, obj])
+// }
 
-export const typeIdent = alt(boxedTypeIdent, lcIdentNs, hash)
+
+
+export const typeIdent = alt(boxedTypeIdent, lcIdentNs, hash).map(resultToString)
 export const typeTerm = seq(
     monoListToMaybe(exclMark.atMost(1)),
     lazy(() => term)
-  ).map(getTerm)
+  )//.map(getTerm)
 export const natTerm = lazy(() => term)
 export const subexpr = alt(
   seq(
@@ -96,7 +103,7 @@ export const subexpr = alt(
     separatedWord(lazy(() => subexpr)),
   ),
   natConst,
-  typeIdent.map(resultToString),
+  typeIdent,
   // seq(
   //   // typeIdent,
   //   // lazy(() => subexpr),
@@ -110,27 +117,50 @@ export const expr = subexpr.atLeast(1)
 export const typeExpr = expr
 export const natExpr = expr
 
+const BaseTemplate = Type`BaseTemplate`({
+  ident: String,
+  expr : T
+})
+
+const LargeTemplate = Type`LargeTemplate`({
+  ident  : String,
+  expr   : T,
+  subExpr: notEmpty
+})
+
+const Template = Union`Template`({
+  LargeTemplate,
+  BaseTemplate
+}, {
+  expr: (ctx) => ctx.case({
+    LargeTemplate: ({ expr, subExpr }) => [expr, ...subExpr],
+    BaseTemplate : ({ expr }) => [expr]
+  }),
+  ident: (ctx) => ctx.value.ident
+}).contramap(([ident, expr, subExpr]) => ({
+  ident,
+  expr,
+  subExpr
+}))
 
 const template = seq(
   typeIdent
-    .map(resultToString)
+    // .map(resultToString)
     .skip(optWhitespace),
   langle
-    .then(optWhitespace)
-    .then(expr),
+    .skip(optWhitespace)
+    .then(expr.map(noSingleArray))
+    .skip(optWhitespace),
     // .map(map(getTerm)),
-  optWhitespace
-    .then(
-      separatedWord(
-        comma
-          .skip(optWhitespace)
-          .then(expr)
-          // .map(map(getTerm))
-      ).many()
-    )
+  separatedWord(
+    comma
+      .skip(optWhitespace)
+      .then(expr.map(noSingleArray))
+      // .map(map(getTerm))
+  ).many()
     .skip(optWhitespace)
     .skip(rangle)
-).map(flatten)
+).map(Template)
 //  .map(getTerm)
 
 export const term = alt(
@@ -141,6 +171,6 @@ export const term = alt(
   seq(percent, lazy(() => term)),
   template,
   natConst,
-  typeIdent.map(resultToString),
+  typeIdent,
   varIdent,
 )
