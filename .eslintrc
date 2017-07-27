@@ -12,22 +12,18 @@
   ],
   "plugins": [
     "babel",
-    "flowtype"
+    "flowtype",
+    "jest"
   ],
   "settings": {
     "flowtype": {
       "onlyFilesWithFlowAnnotation": true
     }
   },
-  "globals": {
-  },
   "env": {
     "node"  : true,
-    "browser": false,
-    "worker": true,
     "es6"   : true,
-    "jasmine": false,
-    "jquery": false
+    "jest"  : true
   },
   "rules": {
     "flowtype/no-weak-types": "off",

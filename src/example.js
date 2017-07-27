@@ -1,7 +1,7 @@
 //@flow
 /* eslint-disable */
 const example = `
-resPQ nonce:flags.0?int128 server_nonce:int128 pq:!string server_public_key_fingerprints:Vector<long> = ResPQ;
+contest.resPQ nonce:flags.0?int128 server_nonce:int128 pq:!string server_public_key_fingerprints:Vector<long> = Vector<long>;
 future_salts#ae500895 req_msg_id:long now:!int users:Vector<InputUser, User> salts:vector<future_salt> = FutureSalts;
 p_q_inner_data#83c95aec pq:string p:string q:string nonce:int128 server_nonce:int128 new_nonce:int256 = P_Q_inner_data;
 

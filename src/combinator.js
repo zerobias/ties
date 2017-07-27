@@ -1,22 +1,45 @@
 //@flow
-import { T, flatten, join, pipe, of, reject, filter, isEmpty, unnest, complement } from 'ramda'
+import { T, flatten, join, pipe, of, reject, filter, isEmpty, unnest, complement, isNil } from 'ramda'
 // import Type from 'mezzanine'
 // import { hasInstance, fromNullable, Just, Nothing, IMaybe } from 'folktale/data/maybe'
 import { Type, Union } from 'mezzanine'
-import { seq, separatedWord, alt, lazy, optWhitespace, noWhitespace, word } from './fork'
+import { seq, separatedWord, alt, lazy, optWhitespace, noWhitespace, word } from './parser'
 import { ignore } from './comment'
 import { comma, langle, rangle, natConst, dot, question, exclMark, underscore,
   openBrace, closeBrace, colon, openPar, closePar, asterisk,
   openBracket, closeBracket, equals, semicolon, tripleMinus } from './token'
-import { boxedTypeIdent, varIdent, varIdentOpt, lcIdentFull, lcIdentNs } from './ident'
-import { subexpr, natTerm, typeTerm /*as origTypeTerm*/ } from './term'
+import { boxedTypeIdent, varIdent, varIdentOpt, lcIdentFull, lcIdentNs, UcIdent } from './ident'
+import { subexpr, natTerm, typeTerm /*as origTypeTerm*/, TypeTerm } from './term'
 import { resultToString, monoListToMaybe, notEmpty } from './util'
+
+const Result = Union`Result`({
+  Seq: {
+    param: T,
+    head : Array
+  },
+  Generic: {
+    param: T,
+    head : T,
+    tail : Array
+  },
+
+}).contramap(([param, head, tail]) =>
+  tail
+    ? {
+      param,
+      head,
+      tail,
+    }
+    : {
+      param,
+      head,
+    })
 
 export const resultType = alt(
   seq(
     boxedTypeIdent
-      .skip(noWhitespace),
-    langle
+      .skip(noWhitespace)
+      .skip(langle)
       .skip(noWhitespace),
     subexpr,
     separatedWord(
@@ -24,53 +47,24 @@ export const resultType = alt(
         .skip(noWhitespace)
         .then(subexpr)
     ).many()
-      .skip(noWhitespace),
-    rangle,
+      .skip(noWhitespace)
+      .skip(rangle),
   ),
   seq(
     boxedTypeIdent,
     separatedWord(subexpr).many(),
   ),
-)
+).map(Result)
 
-// const Argument = Type`Argument`({
-//   name  : String,
-//   cond  : T,
-//   tlType: T
-// }).contramap(([name, cond, tlType]) => ({
-//   name,
-//   cond,
-//   tlType,
-// }))
+const Cond = Type`Cond`({
+  ident: String,
+  index: Number,
+})
 
-// const Plain = Type`Plain`({
-//   mainPart: String
-// })
-//   // .contramap(({ mainPart }) => mainPart)
-// const Dependent = Type`Dependent`({
-//   mainPart: String,
-//   subpart : notEmpty
-// })
-
-// const Bac = Type`Bac`(T)
-
-// const flatString = pipe(flatten, join(''))
-
-// const Result = Union`Result`({
-//   Plain,
-//   Dependent,
-//   Bac
-// }, {
-//   typed: ctx => ctx.type
-// }).contramap(([p1, p2]) => ({
-//   mainPart: flatString(p1),
-//   subpart : flatString(p2)
-// }))/*.contramap(
-//   e => (
-//     console.log(e),
-//     e
-//   )
-// )*/
+const CondRaw = Cond.contramap(([ident, [index]]) => ({
+  ident,
+  index,
+}))
 
 export const condition = seq(
   varIdent, //.map(resultToString),
@@ -79,17 +73,14 @@ export const condition = seq(
       natConst
         .map(join(''))
         .map(parseInt)
-    ).atMost(1)),
-  question
-)
+    ).atMost(1))
+    .skip(question)
+).map(CondRaw)
 
 const multiplicity = seq(natTerm, optWhitespace, asterisk)
 
 export const fullCombinatorId = alt(lcIdentFull, underscore)
-// export const combinatorId = alt(lcIdentNs, underscore)
-// export const typeTerm = seq(
-//   exclMark.atMost(1),
-//   origTypeTerm)
+
 export const optArgs = seq(
   openBrace,
   separatedWord(varIdent)
@@ -98,31 +89,45 @@ export const optArgs = seq(
   colon
     .skip(noWhitespace),
   typeTerm
-    .skip(noWhitespace),
-  closeBrace,
-  // optWhitespace,
-)
+    .skip(noWhitespace)
+    .skip(closeBrace),
+).map(Type`OptArgs`(T))
 
+const TypedArg = Union`TypedArg`({
+  Cond: {
+    ident: String,
+    cond : Cond,
+    term : T,
+  },
+  Plain: {
+    ident: String,
+    term : T,
+  }
+}).contramap(([ident, cond, term]) =>
+  isEmpty(cond)
+    ? {
+      ident,
+      term,
+    }
+    : {
+      ident,
+      cond: cond[0],
+      term
+    })
 
-
-// console.log(VarIdent)
 const args1 = typeTerm
 export const args2 = seq(
   varIdentOpt
     .map(resultToString)
     .skip(noWhitespace),
-    // .map(Arg.NameOf),
-
   colon
     .skip(noWhitespace)
     .then(
       monoListToMaybe(
-        condition
-        .atMost(1)),
-    )
+        condition.atMost(1)))
     .skip(noWhitespace),
   typeTerm,
-)//.map(Argument)
+).map(TypedArg)
 
 export const args3 = seq(
   openPar,
@@ -153,7 +158,6 @@ const args4 = seq(
     .many()
     .skip(noWhitespace),
   closeBracket,
-  // optWhitespace,
 )
 
 export const args = alt(
@@ -163,22 +167,26 @@ export const args = alt(
   args1,
 )
 
+const Expression = Type`Expression`({
+  declaration: T,
+  optArgs    : T,
+  args       : T,
+  result     : T
+}).contramap(([declaration, optArgs, args, result]) => ({ declaration, optArgs, args, result }))
+
 export const combinator = seq(
-  fullCombinatorId, //.map(resultToString),
+  fullCombinatorId,
   separatedWord(optArgs).many(),
   separatedWord(args)
     .many()
     .skip(optWhitespace)
-    // .map(unnest),
-    // .map(reject(isEmpty)),
     .skip(equals)
     .skip(optWhitespace),
   resultType
-    // .map(Result)
     .skip(optWhitespace)
     .skip(semicolon)
     .skip(optWhitespace),
-)
+).map(Expression)
 
 
 export const declaration = alt(

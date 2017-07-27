@@ -1,6 +1,7 @@
 [ignore]
 <PROJECT_ROOT>/node_modules/*.json
-.vscode/.*
+<PROJECT_ROOT>/node_modules/mezzanine/.*
+<PROJECT_ROOT>/.vscode/.*
 .*/**/*.draft.js
 <PROJECT_ROOT>/lib
 <PROJECT_ROOT>/es
@@ -19,7 +20,6 @@ unsafe.enable_getters_and_setters=true
 emoji=true
 esproposal.decorators=ignore
 module.use_strict=true
-strip_root=true
 esproposal.export_star_as=enable
 module.name_mapper='^flow-static-land/lib\(.*\)$' -> 'flow-static-land/src\1'
 module.name_mapper='^flow-static-land/src\(.*\)$' -> 'flow-static-land/\1'

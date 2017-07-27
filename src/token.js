@@ -1,6 +1,6 @@
 //@flow
 'use strict'
-import { digit, word } from './fork'
+import { digit, word } from './parser'
 
 export const underscore   = word('_')
 export const colon        = word(':')

@@ -1,17 +1,12 @@
 //@flow
 
 import { flatten, join, pipe, of, reject, filter, isEmpty, complement } from 'ramda'
-// import { fromNullable } from 'folktale/data/maybe'
-import { Maybe } from 'mezzanine'
-import { typeof Parsimmon } from './fork'
+import { type Parsimmon } from './parser'
 
 
 export const resultToString = pipe(flatten, join(''))
 export const monoListToMaybe =
-  (obj: Parsimmon) =>
-    obj
-      // .map(list => list[0])
-      // .map(Maybe)
+  (obj: Parsimmon) => obj
 
 export const notEmpty = complement(isEmpty)
 

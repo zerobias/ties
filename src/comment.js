@@ -1,16 +1,15 @@
 //@flow
 
-import { word, takeWhile, optWhitespace, alt, any } from './fork'
+import { word, takeWhile, optWhitespace, alt, lookahead } from './parser'
 
 const newLine = word(`\n`)
 
 export const oneLineComment =
   alt(word('//'), newLine)
-    // .then(takeWhile(str => str !== `\n`))
-    // .map(() => '')
-    .chain(() => takeWhile(str => str !== `\n`).skip(newLine))
+    .chain(() =>
+      takeWhile((str: string): boolean %checks => str !== `\n`).skip(newLine))
+    // .atLeast(1)
 
-export const ignore = //oneLineComment
+export const ignore =
   alt(oneLineComment, optWhitespace, newLine)
-    // .many()
     .map(() => ' ')

@@ -1,19 +1,19 @@
 //@flow
 'use strict'
 
-import { outputJsonSync } from 'fs-extra'
+// import { outputJsonSync } from 'fs-extra'
 
 // import { type Parser, of, seq, oneOf, alt, lazy, digit, string as word } from 'parsimmon'
 import { flatten, join, pipe, is, concat, tap } from 'ramda'
-import { Type, Union } from 'mezzanine'
+// import { Type, Union } from 'mezzanine'
 import * as L from 'partial.lenses'
-import { lcIdentFull, boxedTypeIdent } from './ident'
+// import { lcIdentFull, boxedTypeIdent } from './ident'
 import { args, combinator, program, args2, fullCombinatorId } from './combinator'
-import { term } from './term'
+// import { term } from './term'
 import example from './example'
-import { ignore } from './comment'
+// import { ignore } from './comment'
 
-const resultToString = pipe(flatten, join(''))
+// const resultToString = pipe(flatten, join(''))
 
 // declare var flowDebug: $Flow$DebugPrint
 
@@ -37,10 +37,11 @@ const resultToString = pipe(flatten, join(''))
 // vectorTotal {t:Type} total_count:int vector:%(Vector t) = VectorTotal t;`)
 // const result = ignore.parse(`//asdfgasd`)
 export const result = program.parse(example)
+console.log(result)
 // const result = typeTerm.parse(`contacts.Link`)
-const list = result.value
-  ? resultToString(result.value)
-  : result
+// const list = result.value
+//   ? resultToString(result.value)
+//   : result
 
 const lens = L.compose(
   ['value'],

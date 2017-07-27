@@ -1,0 +1,11 @@
+{
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "coverageReporters": [
+    "lcov", "text-summary"
+  ],
+  "testEnvironment": "node",
+  "transform": {
+    "^.+\\.jsx?$": "babel-jest"
+  }
+}
